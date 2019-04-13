@@ -1,0 +1,230 @@
+ || {};
+        OpenLayers.Util.applyDefaults(options, context);
+        var root = this.writeNode(name, options);
+        this.nestingLayerLookup = null; //clear lookup
+        this.setAttributeNS(
+            root, this.namespaces["xsi"],
+            "xsi:schemaLocation", this.schemaLocation
+        );
+        return OpenLayers.Format.XML.prototype.write.apply(this, [root]);
+    }, 
+
+    /**
+     * Property: readers
+     * Contains public functions, grouped by namespace prefix, that will
+     *     be applied when a namespaced node is found matching the function
+     *     name.  The function will be applied in the scope of this parser
+     *     with two arguments: the node being read and a context object passed
+     *     from the parent.
+     */
+    readers: {
+        "kml": {
+            "Document": function(node, obj) {
+                obj.features = new OpenLayers.Format.KML(
+                    {kmlns: this.namespaces.kml, 
+                        extractStyles: true}).read(node);
+            }
+        },
+        "owc": { 
+            "OWSContext": function(node, obj) {
+                this.readChildNodes(node, obj);
+            }, 
+            "General": function(node, obj) {
+                this.readChildNodes(node, obj);
+            },
+            "ResourceList": function(node, obj) {
+                this.readChildNodes(node, obj);
+            },
+            "Layer": function(node, obj) {
+                var layerContext = {
+                    metadata: {},
+                    visibility: (node.getAttribute("hidden") != "1"),
+                    queryable: (node.getAttribute("queryable") == "1"),
+                    opacity: ((node.getAttribute("opacity") != null) ? 
+                        parseFloat(node.getAttribute("opacity")) : null),
+                    name: node.getAttribute("name"),
+                    /* A category layer is a dummy layer meant for creating
+                       hierarchies. It is not a physical layer in the 
+                       OpenLayers sense. The assumption we make here is that
+                       category layers do not have a name attribute */
+                    categoryLayer: (node.getAttribute("name") == null),
+                    formats: [],
+                    styles: []
+                };
+                if (!obj.layersContext) {
+                    obj.layersContext = [];
+                }
+                obj.layersContext.push(layerContext);
+                this.readChildNodes(node, layerContext);
+            },
+            "InlineGeometry": function(node, obj) {
+                obj.features = [];
+                var elements = this.getElementsByTagNameNS(node, 
+                    this.namespaces.gml, "featureMember");
+                var el;
+                if (elements.length >= 1) {
+                    el = elements[0];
+                }
+                if (el && el.firstChild) {
+                    var featurenode = (el.firstChild.nextSibling) ? 
+                        el.firstChild.nextSibling : el.firstChild;
+                    this.setNamespace("feature", featurenode.namespaceURI);
+                    this.featureType = featurenode.localName || 
+                        featurenode.nodeName.split(":").pop();
+                    this.readChildNodes(node, obj);
+                }
+            },
+            "Server": function(node, obj) {
+                // when having multiple Server types, we prefer WMS
+                if ((!obj.service && !obj.version) || 
+                    (obj.service != 
+                        OpenLayers.Format.Context.serviceTypes.WMS)) {
+                            obj.service = node.getAttribute("service");
+                            obj.version = node.getAttribute("version");
+                            this.readChildNodes(node, obj);
+                }
+            },
+            "Name": function(node, obj) {
+                obj.name = this.getChildValue(node);
+                this.readChildNodes(node, obj);
+            },
+            "Title": function(node, obj) {
+                obj.title = this.getChildValue(node);
+                this.readChildNodes(node, obj);
+            },
+            "StyleList": function(node, obj) {
+                this.readChildNodes(node, obj.styles);
+            },
+            "Style": function(node, obj) {
+                var style = {};
+                obj.push(style);
+                this.readChildNodes(node, style);
+            },
+            "LegendURL": function(node, obj) {
+                var legend = {};
+                obj.legend = legend;
+                this.readChildNodes(node, legend);
+            },
+            "OnlineResource": function(node, obj) {
+                obj.url = this.getAttributeNS(node, this.namespaces.xlink, 
+                    "href");
+                this.readChildNodes(node, obj);
+            }
+        },
+        "ows": OpenLayers.Format.OWSCommon.v1_0_0.prototype.readers.ows,
+        "gml": OpenLayers.Format.GML.v2.prototype.readers.gml,
+        "sld": OpenLayers.Format.SLD.v1_0_0.prototype.readers.sld,
+        "feature": OpenLayers.Format.GML.v2.prototype.readers.feature
+    },
+
+    /**
+     * Property: writers
+     * As a compliment to the readers property, this structure contains public
+     *     writing functions grouped by namespace alias and named like the
+     *     node names they produce.
+     */
+    writers: {
+        "owc": {
+            "OWSContext": function(options) {
+                var node = this.createElementNSPlus("OWSContext", {
+                    attributes: {
+                        version: this.VERSION,
+                        id: options.id || OpenLayers.Util.createUniqueID("OpenLayers_OWSContext_")
+                    } 
+                }); 
+                this.writeNode("General", options, node);
+                this.writeNode("ResourceList", options, node);
+                return node; 
+            },
+            "General": function(options) {
+                var node = this.createElementNSPlus("General");
+                this.writeNode("ows:BoundingBox", options, node);
+                this.writeNode("ows:Title", options.title || 'OpenLayers OWSContext', node);
+                return node;
+            },
+            "ResourceList": function(options) {
+                var node = this.createElementNSPlus("ResourceList");
+                for (var i=0, len=options.layers.length; i<len; i++) {
+                    var layer = options.layers[i];
+                    var decomposedPath = this.decomposeNestingPath(layer.metadata.nestingPath);
+                    this.writeNode("_Layer", {layer: layer, subPaths: decomposedPath}, node);
+                }
+                return node;
+            },
+            "Server": function(options) {
+                var node = this.createElementNSPlus("Server", {attributes: {
+                    version: options.version,
+                    service: options.service }
+                });
+                this.writeNode("OnlineResource", options, node);
+                return node;
+            },
+            "OnlineResource": function(options) {
+                var node = this.createElementNSPlus("OnlineResource", {attributes: {
+                    "xlink:href": options.url }
+                });
+                return node;
+            },
+            "InlineGeometry": function(layer) {
+                var node = this.createElementNSPlus("InlineGeometry"),
+                    dataExtent = layer.getDataExtent();
+                if (dataExtent !== null) {
+                    this.writeNode("gml:boundedBy", dataExtent, node);
+                }
+                for (var i=0, len=layer.features.length; i<len; i++) {
+                    this.writeNode("gml:featureMember", layer.features[i], node);
+                }
+                return node;
+            },
+            "StyleList": function(styles) {
+                var node = this.createElementNSPlus("StyleList");
+                for (var i=0, len=styles.length; i<len; i++) {
+                    this.writeNode("Style", styles[i], node);
+                }
+                return node;
+            },
+            "Style": function(style) {
+                var node = this.createElementNSPlus("Style");
+                this.writeNode("Name", style, node);
+                this.writeNode("Title", style, node);
+                if (style.legend) {
+                    this.writeNode("LegendURL", style, node);
+                }
+                return node;
+            },
+            "Name": function(obj) {
+                var node = this.createElementNSPlus("Name", {
+                    value: obj.name });
+                return node;
+            },
+            "Title": function(obj) {
+                var node = this.createElementNSPlus("Title", {
+                    value: obj.title });
+                return node;
+            },
+            "LegendURL": function(style) {
+                var node = this.createElementNSPlus("LegendURL");
+                this.writeNode("OnlineResource", style.legend, node);
+                return node;
+            },
+            "_WMS": function(layer) {
+                var node = this.createElementNSPlus("Layer", {attributes: {
+                    name: layer.params.LAYERS,
+                    queryable: layer.queryable ? "1" : "0",
+                    hidden: layer.visibility ? "0" : "1",
+                    opacity: layer.hasOwnProperty("opacity") ? layer.opacity : null}
+                });
+                this.writeNode("ows:Title", layer.name, node);
+                this.writeNode("ows:OutputFormat", layer.params.FORMAT, node);
+                this.writeNode("Server", {service: 
+                    OpenLayers.Format.Context.serviceTypes.WMS,
+                    version: layer.params.VERSION, url: layer.url}, node);
+                if (layer.metadata.styles && layer.metadata.styles.length > 0) {
+                    this.writeNode("StyleList", layer.metadata.styles, node);
+                }
+                return node;
+            },
+            "_Layer": function(options) {
+                var layer, subPaths, node, title;
+                layer = options.layer;
+              

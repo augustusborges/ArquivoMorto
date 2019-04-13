@@ -1,0 +1,13 @@
+tocTab[tocTab.length] = new Array("0.2:1", "", "Requisitos", "EARoot/EA2/EA129.php", "188.png", "22", "0", "", "Custom diagram0","{DD0C7A3F-0F21-46e8-9690-725F283852A6}");
+tocTab[tocTab.length] = new Array("0.2:2", "", "«Functional» 10. Gestão Financeira", "EARoot/EA2/EA131.php", "19.png", "74", "0", "", "Requirement0","{8257C806-FA58-4acc-85D4-9770787FE71D}");
+tocTab[tocTab.length] = new Array("0.2:3", "", "«Functional» 100. Transporte de Produtos", "EARoot/EA2/EA132.php", "19.png", "82", "0", "", "Requirement0","{947133C2-B1C9-4d51-98D0-D33E79AF8FF1}");
+tocTab[tocTab.length] = new Array("0.2:4", "", "«Functional» 110. Processo de importação", "EARoot/EA2/EA133.php", "19.png", "85", "0", "", "Requirement0","{909D7161-CC8F-4b58-9B30-E5D7A6BA87D2}");
+tocTab[tocTab.length] = new Array("0.2:5", "", "«Functional» 20. Cadastro de Transportadoras", "EARoot/EA2/EA134.php", "19.png", "75", "0", "", "Requirement0","{9EE76A1B-3AEF-4e7b-B9CF-5B18C16541C7}");
+tocTab[tocTab.length] = new Array("0.2:6", "", "«Functional» 30. Cadastro de Pedido de Venda", "EARoot/EA2/EA135.php", "19.png", "77", "0", "", "Requirement0","{6727FD1A-90C3-4461-A0C7-2B593F012CFC}");
+tocTab[tocTab.length] = new Array("0.2:7", "", "«Functional» 40. Gestão de Estoque", "EARoot/EA2/EA136.php", "19.png", "78", "0", "", "Requirement0","{C4924CCA-EF8B-43ec-9265-60868A6529CF}");
+tocTab[tocTab.length] = new Array("0.2:8", "", "«Functional» 50. Cadastro de Cliente", "EARoot/EA2/EA137.php", "19.png", "73", "0", "", "Requirement0","{76F07199-1654-4861-89BF-1124286AF4CE}");
+tocTab[tocTab.length] = new Array("0.2:9", "", "«Functional» 60. Regras de Frete", "EARoot/EA2/EA138.php", "19.png", "79", "0", "", "Requirement0","{FDC93FC5-90F3-43ed-9469-A37DB4262B86}");
+tocTab[tocTab.length] = new Array("0.2:10", "", "«Functional» 70. Cálculo de Forma de Pagamento", "EARoot/EA2/EA139.php", "19.png", "80", "0", "", "Requirement0","{376EF43D-0226-45c9-9B20-6C52A637B073}");
+tocTab[tocTab.length] = new Array("0.2:11", "", "«Functional» 80. Faturamento", "EARoot/EA2/EA140.php", "19.png", "76", "0", "", "Requirement0","{30D8E407-3C8E-47a9-BF55-23DB2CA476EA}");
+tocTab[tocTab.length] = new Array("0.2:12", "", "«Functional» 90. Contas a Receber", "EARoot/EA2/EA141.php", "19.png", "81", "0", "", "Requirement0","{0FDBD5E4-FDC3-4917-ADF1-580149D295ED}");
+tocTab[tocTab.length] = new Array("0.2:13", "", "«Functional» PENDENCIAS", "EARoot/EA2/EA142.php", "19.png", "83", "0", "", "Requirement0","{D62A91FE-2842-42db-A478-786089C7B914}");

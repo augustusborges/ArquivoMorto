@@ -1,0 +1,236 @@
+div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="section">
+<h2><a name="basicconf" id="basicconf">Configuration de base</a></h2>
+
+<p>La directive de base pour le chargement du module est</p>
+
+<pre class="prettyprint lang-config">LoadModule lua_module modules/mod_lua.so</pre>
+
+
+<p>
+<code>mod_lua</code> fournit un gestionnaire nommé
+<code>lua-script</code> qui peut être utilisé avec une directive
+<code class="directive"><a href="../mod/mod_mime.html#addhandler">AddHandler</a></code> ou <code class="directive"><a href="../mod/core.html#sethandler">SetHandler</a></code> :</p>
+
+<pre class="prettyprint lang-config">&lt;Files "*.lua"&gt;
+    SetHandler lua-script
+&lt;/Files&gt;</pre>
+
+
+<p>
+Ceci aura pour effet de faire traiter les requêtes pour les fichiers
+dont l'extension est <code>.lua</code> par <code>mod_lua</code> en
+invoquant cette fonction de <code>gestion</code> de fichier.
+</p>
+
+<p>Pour plus de détails, voir la directive
+<code class="directive">LuaMapHandler</code>.
+ </p>
+</div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="section">
+<h2><a name="writinghandlers" id="writinghandlers">Ecrire des gestionnaires</a></h2>
+<p>Dans l'API du serveur HTTP Apache, un gestionnaire est une sorte de
+point d'accroche (hook) spécifique responsable de la génération de la
+réponse. <code class="module"><a href="../mod/mod_proxy.html">mod_proxy</a></code>, <code class="module"><a href="../mod/mod_cgi.html">mod_cgi</a></code> et
+<code class="module"><a href="../mod/mod_status.html">mod_status</a></code> sont des exemples de modules comportant un
+gestionnaire.</p>
+
+<p><code>mod_lua</code> cherche toujours à invoquer une fonction Lua pour le
+gestionnaire, plutôt que de simplement évaluer le corps d'un script dans
+le style de CGI. Une fonction de gestionnaire se présente comme suit :</p>
+
+
+<pre class="prettyprint lang-lua">
+<strong>example.lua</strong><br />
+-- exemple de gestionnaire
+
+require "string"
+
+--[[
+     Il s'agit du nom de méthode par défaut pour les gestionnaires Lua ;
+     voir les noms de fonctions optionnels dans la directive
+     LuaMapHandler pour choisir un point d'entrée différent.
+--]]
+function handle(r)
+    r.content_type = "text/plain"
+
+    if r.method == 'GET' then
+    	r:puts("Hello Lua World!\n")
+        for k, v in pairs( r:parseargs() ) do
+            r:puts( string.format("%s: %s\n", k, v) )
+        end
+    elseif r.method == 'POST' then
+    	r:puts("Hello Lua World!\n")
+        for k, v in pairs( r:parsebody() ) do
+            r:puts( string.format("%s: %s\n", k, v) )
+        end
+    else
+    elseif r.method == 'PUT' then
+-- message d'erreur personnalisé
+        r:puts("Unsupported HTTP method " .. r.method)
+	r.status = 405
+        return apache2.OK
+    else
+-- message d'erreur ErrorDocument
+        return 501
+    end
+    return apache2.OK
+end</pre>
+
+
+<p>
+Ce gestionnaire se contente d'afficher les arguments codés d'un uri ou
+d'un formulaire dans un page au format texte.
+</p>
+
+<p>
+Cela signifie que vous pouvez (et êtes encouragé à) avoir plusieurs
+gestionnaires (ou points d'entrée, ou filtres) dans le même script.
+</p>
+
+</div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="section">
+<h2><a name="writingauthzproviders" id="writingauthzproviders">Ecriture de fournisseurs d'autorisation</a></h2>
+
+
+<p><code class="module"><a href="../mod/mod_authz_core.html">mod_authz_core</a></code> fournit une interface d'autorisation
+de haut niveau bien plus facile à utiliser que dans les hooks
+correspondants. Le premier argument de la directive <code class="directive"><a href="../mod/mod_authz_core.html#require">Require</a></code> permet de spécifier le
+fournisseur d'autorisation à utiliser. Pour chaque directive <code class="directive"><a href="../mod/mod_authz_core.html#require">Require</a></code>,
+<code class="module"><a href="../mod/mod_authz_core.html">mod_authz_core</a></code> appellera le fournisseur d'autorisation
+spécifié, le reste de la ligne constituant les paramètres. Le
+fournisseur considéré va alors vérifier les autorisations et fournir le
+résultat dans une valeur de retour.</p>
+
+<p>En général, le fournisseur authz est appelé avant l'authentification.
+S'il doit connaître le nom d'utilisateur authentifié (ou si
+l'utilisateur est appelé à être authentifié), le fournisseur doit
+renvoyer <code>apache2.AUTHZ_DENIED_NO_USER</code>, ce qui va
+déclancher le processus d'authentification et un deuxième appel du
+fournisseur authz.</p>
+
+<p>La fonction du fournisseur authz ci-dessous accepte deux arguments,
+une adresse IP et un nom d'utilisateur. Elle autorise l'accès dans le
+cas où la requête provient de l'adresse IP spécifiée, ou si
+l'utilisateur authentifié correspond au second argument :</p>
+
+<pre class="prettyprint lang-lua">
+<strong>authz_provider.lua</strong><br />
+
+require 'apache2'
+
+function authz_check_foo(r, ip, user)
+    if r.useragent_ip == ip then
+        return apache2.AUTHZ_GRANTED
+    elseif r.user == nil then
+        return apache2.AUTHZ_DENIED_NO_USER
+    elseif r.user == user then
+        return apache2.AUTHZ_GRANTED
+    else
+        return apache2.AUTHZ_DENIED
+    end
+end</pre>
+
+
+<p>La configuration suivante enregistre cette fonction en tant que
+fournisseur <code>foo</code>, et la configure por l'URL <code>/</code> :</p>
+<pre class="prettyprint lang-config">LuaAuthzProvider foo authz_provider.lua authz_check_foo
+&lt;Location "/"&gt;
+  Require foo 10.1.2.3 john_doe
+&lt;/Location&gt;</pre>
+
+
+</div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="section">
+<h2><a name="writinghooks" id="writinghooks">Ecriture de fonctions d'accroche
+(hooks)</a></h2>
+
+<p>Les fonctions d'accroche déterminent la manière dont les modules (et
+les scripts Lua) participent au traitement des requêtes. Chaque type
+d'accroche proposé par le serveur a un rôle spécifique, comme
+l'association de requêtes au système de fichiers, le contrôle d'accès,
+ou la définition de types MIME : </p>
+
+<table class="bordered"><tr class="header">
+        <th>Phase d'accroche</th>
+        <th>Directive mod_lua</th>
+        <th>Description</th>
+    </tr>
+<tr>
+        <td>Gestionnaire rapide</td>
+        <td><code class="directive"><a href="#luaquickhandler">LuaQuickHandler</a></code></td>
+        <td>Il s'agit de la première accroche appelée lorsqu'une requête
+	a été associée à un serveur ou un serveur virtuel.</td>
+    </tr>
+<tr class="odd">
+        <td>Phase de traduction</td>
+        <td><code class="directive"><a href="#luahooktranslatename">LuaHookTranslateName</a></code></td>
+        <td>Cette phase traduit l'URI de la requête en nom de fichier
+	sur le système. Ce sont des modules comme
+	<code class="module"><a href="../mod/mod_alias.html">mod_alias</a></code> et <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> qui
+	interviennent au cours de cette phase.</td>
+    </tr>
+<tr>
+        <td>Choix du lieu de stockage de la ressource</td>
+        <td><code class="directive"><a href="#luahookmaptostorage">LuaHookMapToStorage</a></code></td>
+        <td>Cette phase définit le lieu de stockage de la ressource :
+	physique, en cache ou externe/mandaté. Elle est assurée par les
+	modules de mandat ou de mise en cache.</td>
+    </tr>
+<tr class="odd">
+        <td>Autorisation d'accès</td>
+        <td><code class="directive"><a href="#luahookaccesschecker">LuaHookAccessChecker</a></code></td>
+        <td>Cette phase vérifie si un client a l'autorisation d'accès à
+	la ressource. Elle s'exécute avant l'authentification de
+	l'utisateur ; il faut donc être prudent.
+        </td>
+    </tr>
+<tr>
+        <td>Vérification de l'identifiant utilisateur</td>
+        <td><code class="directive"><a href="#luahookcheckuserid">LuaHookCheckUserID</a></code></td>
+        <td>Cette phase vérifie l'identifiant de l'utilisateur ayant
+	fait l'objet d'une négociation.</td>
+    </tr>
+<tr class="odd">
+        <td>Vérification de l'autorisation d'accès</td>
+        <td><code class="directive"><a href="#luahookauthchecker">LuaHookAuthChecker</a></code>
+	ou
+            <code class="directive"><a href="#luaauthzprovider">LuaAuthzProvider</a></code></td>
+        <td>Cette phase vérifie l'autorisation d'accès d'un utilisateur
+	en fonction des ses paramètres de connexion, comme
+	l'identifiant, le certificat, etc...
+        </td>
+    </tr>
+<tr>
+        <td>Vérification du type de la ressource</td>
+        <td><code class="directive"><a href="#luahooktypechecker">LuaHookTypeChecker</a></code></td>
+        <td>Cette phase assigne un type de contenu et un gestionnaire à
+	la ressource.</td>
+    </tr>
+<tr class="odd">
+        <td>Derniers réglages</td>
+        <td><code class="directive"><a href="#luahookfixups">LuaHookFixups</a></code></td>
+        <td>C'est la dernière phase avant l'activation des gestionnaires
+	de contenu. Toute modification de dernière minute à la requête
+	doit être effectuée ici.</td>
+    </tr>
+<tr>
+        <td>Gestionnaire de contenu</td>
+        <td>fichiers fx. <code>.lua</code> ou directive <code class="directive"><a href="#luamaphandler">LuaMapHandler</a></code></td>
+        <td>C'est durant cette phase que le contenu est traité. Les
+	fichiers sont lus, interprétés, certains sont exécutés, et le
+	résultat obtenu est envoyé au client.</td>
+    </tr>
+<tr class="odd">
+        <td>Journalisation</td>
+        <td><code class="directive"><a href="#luahooklog">LuaHookLog</a></code></td>
+        <td>Lorsqu'une requête a été traitée, plusieurs phases de
+	journalisation interviennent, et enregistrent leurs résultats
+	dans les fichiers d'erreur ou d'accès. Mod_lua peut
+	s'intercaler au départ de ce processus et ainsi contrôler la
+	journalisation.</td>
+    </tr>
+</table>
+
+<p>Les fonctions d'accroche reçoivent l'objet de la requête comme seul
+argument (sauf LuaAuthzPro

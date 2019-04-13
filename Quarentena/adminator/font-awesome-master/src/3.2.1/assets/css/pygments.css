@@ -1,0 +1,123 @@
+var tocRoot, tocBranch, tocSel, tocLoading, tocLastID, tableSel = null, tabHead, data, tocTab, tocInitRoot, tocMemToc,
+	rFStatus, oldData, tableSelTable;
+var prevPage = "";
+var initI;
+var icon = new Array();
+var preloadIcons =
+	new Array(1, 10, 101, 102, 103, 104, 106, 107, 108, 11, 113, 116, 118, 16, 175, 176, 177, 178, 179, 180, 181, 182,
+		183, 184, 185, 186, 187, 188, 189, 19, 20, 21, 24, 25, 26, 28, 29, 31, 34, 4, 5, 52, 53, 56, 57, 6, 60, 68, 69,
+		7, 8, 82, 9, 99);
+
+var browser = browserCheck();
+var content = 0;
+var Linkguid = "";
+
+function browserCheck()
+{
+	browser = navigator.userAgent.toLowerCase();
+
+	if (browser.indexOf('msie') != -1)
+	{
+		if (browser.substring(browser.indexOf('msie') + 5, browser.indexOf('.', browser.indexOf('msie'))) > 6)
+			return ("ie7");
+
+		if (browser.substring(browser.indexOf('msie') + 5, browser.indexOf('.', browser.indexOf('msie'))) > 5)
+			return ("ie6");
+		else
+			return ("ie_old");
+	}
+	else if (browser.indexOf('firefox') != -1)
+		return ("ff");
+	else if (browser.indexOf('opera') != -1)
+		return ("op");
+	else if (browser.indexOf('gecko') != -1)
+		return ("ff");
+}
+
+function changeCSS(theClass, element, value, target)
+{
+	var cssRules;
+	target = eval(target + '.document.styleSheets');
+
+	if (browser == 'ie6' || browser == 'ie7')
+	{
+		cssRules = 'rules';
+	} else
+	{
+		cssRules = 'cssRules';
+	}
+
+	for (var S = 0; S < target.length; S++)
+	{
+		for (var R = 0; R < target[S][cssRules].length; R++)
+		{
+			if (target[S][cssRules][R].selectorText == theClass)
+			{
+				try
+				{
+					target[S][cssRules][R].style[element] = value;
+				}
+				catch (e)
+				{
+				}
+			}
+		}
+	}
+}
+
+function initItem(item)
+{
+	if (prevPage != cont.document.location.href)
+		tableSel = null;
+
+	if (tableSel == null)
+	{
+		if (cont.document.getElementById('TableGroup') != null)
+		{
+			toggleItem(cont.document.getElementById('TableGroup').getElementsByTagName('li')[0].id.replace("Title",
+				""));
+		}
+
+		prevPage = cont.document.location.href;
+	}
+}
+
+function initLoad(src, toc, home)
+{
+
+	var qs = document.location.search.substring(1);
+
+	if (qs.substring(0, qs.indexOf('=')) == 'goto')
+	{
+		var gotoPage = qs.substring(qs.indexOf('=') + 1).split(':');
+		var fExt = home.substring(home.lastIndexOf('.'));
+		var home = "./EARoot/";
+
+		for (var i = 0; i < gotoPage.length; i++)
+		{
+			home += "EA" + gotoPage[i];
+
+			if (i != gotoPage.length - 1)
+				home += "/";
+			else
+				home += fExt;
+		}
+	}
+
+	content = document.createElement('div');
+	content.className = "IndexBody";
+	content.innerHTML = "	<iframe src='" + toc + "' name='toc' id='tocIFrame' frameborder='0'></iframe>\n";
+
+	if (qs.substring(0, qs.indexOf('=')) == 'guid')
+	{
+		Linkguid = qs.substring(qs.indexOf('=') + 1).split('?guid=');
+		var sGuid = new String(Linkguid);
+
+		if (sGuid.substring(0, 1) == "{" && sGuid.substring(sGuid.length, sGuid.length - 1) == "}")
+			sGuid = sGuid.substring(1, sGuid.length - 1);
+		Linkguid = sGuid;
+		LoadGuidMap(OnReadyLoadGuidMap);
+	} else
+	{
+		// We don't have a guid in the address bar, so set the default homepage and continue
+		content.i

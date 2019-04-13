@@ -1,0 +1,1 @@
+//Arquivo de explanação sobre o site e suas particularidades

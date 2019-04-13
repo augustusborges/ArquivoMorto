@@ -1,0 +1,141 @@
+  * @throws Exception\InvalidArgumentException
+     * @return InputFilterInterface
+     */
+    public function setValidationGroup($name)
+    {
+        if ($name === self::VALIDATE_ALL) {
+            $this->validationGroup = null;
+            foreach ($this->getInputs() as $input) {
+                if ($input instanceof InputFilterInterface) {
+                    $input->setValidationGroup(self::VALIDATE_ALL);
+                }
+            }
+            return $this;
+        }
+
+        if (is_array($name)) {
+            $inputs = array();
+            foreach ($name as $key => $value) {
+                if (! $this->has($key)) {
+                    $inputs[] = $value;
+                    continue;
+                }
+
+                $inputs[] = $key;
+
+                if (! $this->inputs[$key] instanceof InputFilterInterface) {
+                    throw new Exception\InvalidArgumentException(
+                        sprintf(
+                            'Input "%s" must implement InputFilterInterface',
+                            $key
+                        )
+                    );
+                }
+
+                // Recursively populate validation groups for sub input filters
+                $this->inputs[$key]->setValidationGroup($value);
+            }
+        } else {
+            $inputs = func_get_args();
+        }
+
+        if (! empty($inputs)) {
+            $this->validateValidationGroup($inputs);
+            $this->validationGroup = $inputs;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Return a list of inputs that were invalid.
+     *
+     * Implementations should return an associative array of name/input pairs
+     * that failed validation.
+     *
+     * @return InputInterface[]
+     */
+    public function getInvalidInput()
+    {
+        return (is_array($this->invalidInputs) ? $this->invalidInputs : array());
+    }
+
+    /**
+     * Return a list of inputs that were valid.
+     *
+     * Implementations should return an associative array of name/input pairs
+     * that passed validation.
+     *
+     * @return InputInterface[]
+     */
+    public function getValidInput()
+    {
+        return (is_array($this->validInputs) ? $this->validInputs : array());
+    }
+
+    /**
+     * Retrieve a value from a named input
+     *
+     * @param  string $name
+     * @throws Exception\InvalidArgumentException
+     * @return mixed
+     */
+    public function getValue($name)
+    {
+        if (!array_key_exists($name, $this->inputs)) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                '%s expects a valid input name; "%s" was not found in the filter',
+                __METHOD__,
+                $name
+            ));
+        }
+        $input = $this->inputs[$name];
+
+        if ($input instanceof InputFilterInterface) {
+            return $input->getValues();
+        }
+
+        return $input->getValue();
+    }
+
+    /**
+     * Return a list of filtered values
+     *
+     * List should be an associative array, with the values filtered. If
+     * validation failed, this should raise an exception.
+     *
+     * @return array
+     */
+    public function getValues()
+    {
+        $inputs = $this->validationGroup ?: array_keys($this->inputs);
+        $values = array();
+        foreach ($inputs as $name) {
+            $input = $this->inputs[$name];
+
+            if ($input instanceof InputFilterInterface) {
+                $values[$name] = $input->getValues();
+                continue;
+            }
+            $values[$name] = $input->getValue();
+        }
+        return $values;
+    }
+
+    /**
+     * Retrieve a raw (unfiltered) value from a named input
+     *
+     * @param  string $name
+     * @throws Exception\InvalidArgumentException
+     * @return mixed
+     */
+    public function getRawValue($name)
+    {
+        if (!array_key_exists($name, $this->inputs)) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                '%s expects a valid input name; "%s" was not found in the filter',
+                __METHOD__,
+                $name
+            ));
+        }
+        $in

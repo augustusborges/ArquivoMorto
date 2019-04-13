@@ -1,0 +1,313 @@
+a.')
+        ),
+        array(
+            'Update_priv',
+            'UPDATE',
+            __('Allows changing data.')
+        ),
+        array(
+            'Delete_priv',
+            'DELETE',
+            __('Allows deleting data.')
+        ),
+        array(
+            'Create_priv',
+            'CREATE',
+            __('Allows creating new databases and tables.')
+        ),
+        array(
+            'Drop_priv',
+            'DROP',
+            __('Allows dropping databases and tables.')
+        ),
+        array(
+            'Reload_priv',
+            'RELOAD',
+            __('Allows reloading server settings and flushing the server\'s caches.')
+        ),
+        array(
+            'Shutdown_priv',
+            'SHUTDOWN',
+            __('Allows shutting down the server.')
+        ),
+        array(
+            'Process_priv',
+            'PROCESS',
+            __('Allows viewing processes of all users.')
+        ),
+        array(
+            'File_priv',
+            'FILE',
+            __('Allows importing data from and exporting data into files.')
+        ),
+        array(
+            'References_priv',
+            'REFERENCES',
+            __('Has no effect in this MySQL version.')
+        ),
+        array(
+            'Index_priv',
+            'INDEX',
+            __('Allows creating and dropping indexes.')
+        ),
+        array(
+            'Alter_priv',
+            'ALTER',
+            __('Allows altering the structure of existing tables.')
+        ),
+        array(
+            'Show_db_priv',
+            'SHOW DATABASES',
+            __('Gives access to the complete list of databases.')
+        ),
+        array(
+            'Super_priv',
+            'SUPER',
+            __(
+                'Allows connecting, even if maximum number of connections '
+                . 'is reached; required for most administrative operations '
+                . 'like setting global variables or killing threads of other users.'
+            )
+        ),
+        array(
+            'Create_tmp_table_priv',
+            'CREATE TEMPORARY TABLES',
+            __('Allows creating temporary tables.')
+        ),
+        array(
+            'Lock_tables_priv',
+            'LOCK TABLES',
+            __('Allows locking tables for the current thread.')
+        ),
+        array(
+            'Repl_slave_priv',
+            'REPLICATION SLAVE',
+            __('Needed for the replication slaves.')
+        ),
+        array(
+            'Repl_client_priv',
+            'REPLICATION CLIENT',
+            __('Allows the user to ask where the slaves / masters are.')
+        ),
+        array(
+            'Create_view_priv',
+            'CREATE VIEW',
+            __('Allows creating new views.')
+        ),
+        array(
+            'Event_priv',
+            'EVENT',
+            __('Allows to set up events for the event scheduler.')
+        ),
+        array(
+            'Trigger_priv',
+            'TRIGGER',
+            __('Allows creating and dropping triggers.')
+        ),
+        // for table privs:
+        array(
+            'Create View_priv',
+            'CREATE VIEW',
+            __('Allows creating new views.')
+        ),
+        array(
+            'Show_view_priv',
+            'SHOW VIEW',
+            __('Allows performing SHOW CREATE VIEW queries.')
+        ),
+        // for table privs:
+        array(
+            'Show view_priv',
+            'SHOW VIEW',
+            __('Allows performing SHOW CREATE VIEW queries.')
+        ),
+        array(
+            'Create_routine_priv',
+            'CREATE ROUTINE',
+            __('Allows creating stored routines.')
+        ),
+        array(
+            'Alter_routine_priv',
+            'ALTER ROUTINE',
+            __('Allows altering and dropping stored routines.')
+        ),
+        array(
+            'Create_user_priv',
+            'CREATE USER',
+            __('Allows creating, dropping and renaming user accounts.')
+        ),
+        array(
+            'Execute_priv',
+            'EXECUTE',
+            __('Allows executing stored routines.')
+        ),
+    );
+}
+
+/**
+ * Displays on which column(s) a table-specific privilege is granted
+ *
+ * @param array  $columns          columns array
+ * @param array  $row              first row from result or boolean false
+ * @param string $name_for_select  privilege types - Select_priv, Insert_priv
+ *                                 Update_priv, References_priv
+ * @param string $priv_for_header  privilege for header
+ * @param string $name             privilege name: insert, select, update, references
+ * @param string $name_for_dfn     name for dfn
+ * @param string $name_for_current name for current
+ *
+ * @return string $html_output html snippet
+ */
+function PMA_getHtmlForColumnPrivileges($columns, $row, $name_for_select,
+    $priv_for_header, $name, $name_for_dfn, $name_for_current
+) {
+    $data = array(
+        'columns'          => $columns,
+        'row'              => $row,
+        'name_for_select'  => $name_for_select,
+        'priv_for_header'  => $priv_for_header,
+        'name'             => $name,
+        'name_for_dfn'     => $name_for_dfn,
+        'name_for_current' => $name_for_current
+    );
+
+    $html_output = Template::get('privileges/column_privileges')
+        ->render($data);
+
+    return $html_output;
+} // end function
+
+/**
+ * Get sql query for display privileges table
+ *
+ * @param string $db       the database
+ * @param string $table    the table
+ * @param string $username username for database connection
+ * @param string $hostname hostname for database connection
+ *
+ * @return string sql query
+ */
+function PMA_getSqlQueryForDisplayPrivTable($db, $table, $username, $hostname)
+{
+    if ($db == '*') {
+        return "SELECT * FROM `mysql`.`user`"
+            . " WHERE `User` = '" . $GLOBALS['dbi']->escapeString($username) . "'"
+            . " AND `Host` = '" . $GLOBALS['dbi']->escapeString($hostname) . "';";
+    } elseif ($table == '*') {
+        return "SELECT * FROM `mysql`.`db`"
+            . " WHERE `User` = '" . $GLOBALS['dbi']->escapeString($username) . "'"
+            . " AND `Host` = '" . $GLOBALS['dbi']->escapeString($hostname) . "'"
+            . " AND '" . $GLOBALS['dbi']->escapeString(Util::unescapeMysqlWildcards($db)) . "'"
+            . " LIKE `Db`;";
+    }
+    return "SELECT `Table_priv`"
+        . " FROM `mysql`.`tables_priv`"
+        . " WHERE `User` = '" . $GLOBALS['dbi']->escapeString($username) . "'"
+        . " AND `Host` = '" . $GLOBALS['dbi']->escapeString($hostname) . "'"
+        . " AND `Db` = '" . $GLOBALS['dbi']->escapeString(Util::unescapeMysqlWildcards($db)) . "'"
+        . " AND `Table_name` = '" . $GLOBALS['dbi']->escapeString($table) . "';";
+}
+
+/**
+ * Displays a dropdown to select the user group
+ * with menu items configured to each of them.
+ *
+ * @param string $username username
+ *
+ * @return string html to select the user group
+ */
+function PMA_getHtmlToChooseUserGroup($username)
+{
+    $cfgRelation = PMA_getRelationsParam();
+    $groupTable = Util::backquote($cfgRelation['db'])
+        . "." . Util::backquote($cfgRelation['usergroups']);
+    $userTable = Util::backquote($cfgRelation['db'])
+        . "." . Util::backquote($cfgRelation['users']);
+
+    $userGroup = '';
+    if (isset($GLOBALS['username'])) {
+        $sql_query = "SELECT `usergroup` FROM " . $userTable
+            . " WHERE `username` = '" . $GLOBALS['dbi']->escapeString($username) . "'";
+        $userGroup = $GLOBALS['dbi']->fetchValue(
+            $sql_query, 0, 0, $GLOBALS['controllink']
+        );
+    }
+
+    $allUserGroups = array('' => '');
+    $sql_query = "SELECT DISTINCT `usergroup` FROM " . $groupTable;
+    $result = PMA_queryAsControlUser($sql_query, false);
+    if ($result) {
+        while ($row = $GLOBALS['dbi']->fetchRow($result)) {
+            $allUserGroups[$row[0]] = $row[0];
+        }
+    }
+    $GLOBALS['dbi']->freeResult($result);
+
+    // render the template
+    $data = array(
+        'allUserGroups'   => $allUserGroups,
+        'userGroup'       => $userGroup,
+        'params'          => array('username' => $username)
+    );
+    $html_output = Template::get('privileges/choose_user_group')
+        ->render($data);
+
+    return $html_output;
+}
+
+/**
+ * Sets the user group from request values
+ *
+ * @param string $username  username
+ * @param string $userGroup user group to set
+ *
+ * @return void
+ */
+function PMA_setUserGroup($username, $userGroup)
+{
+    $cfgRelation = PMA_getRelationsParam();
+    if (empty($cfgRelation['db']) || empty($cfgRelation['users']) || empty($cfgRelation['usergroups'])) {
+        return;
+    }
+
+    $userTable = Util::backquote($cfgRelation['db'])
+        . "." . Util::backquote($cfgRelation['users']);
+
+    $sql_query = "SELECT `usergroup` FROM " . $userTable
+        . " WHERE `username` = '" . $GLOBALS['dbi']->escapeString($username) . "'";
+    $oldUserGroup = $GLOBALS['dbi']->fetchValue(
+        $sql_query, 0, 0, $GLOBALS['controllink']
+    );
+
+    if ($oldUserGroup === false) {
+        $upd_query = "INSERT INTO " . $userTable . "(`username`, `usergroup`)"
+            . " VALUES ('" . $GLOBALS['dbi']->escapeString($username) . "', "
+            . "'" . $GLOBALS['dbi']->escapeString($userGroup) . "')";
+    } else {
+        if (empty($userGroup)) {
+            $upd_query = "DELETE FROM " . $userTable
+                . " WHERE `username`='" . $GLOBALS['dbi']->escapeString($username) . "'";
+        } elseif ($oldUserGroup != $userGroup) {
+            $upd_query = "UPDATE " . $userTable
+                . " SET `usergroup`='" . $GLOBALS['dbi']->escapeString($userGroup) . "'"
+                . " WHERE `username`='" . $GLOBALS['dbi']->escapeString($username) . "'";
+        }
+    }
+    if (isset($upd_query)) {
+        PMA_queryAsControlUser($upd_query);
+    }
+}
+
+/**
+ * Displays the privileges form table
+ *
+ * @param string  $db     the database
+ * @param string  $table  the table
+ * @param boolean $submit whether to display the submit button or not
+ *
+ * @global  array     $cfg         the phpMyAdmin configuration
+ * @global  resource  $user_link   the database connection
+ *
+ * @return string html snippet
+ */
+function 

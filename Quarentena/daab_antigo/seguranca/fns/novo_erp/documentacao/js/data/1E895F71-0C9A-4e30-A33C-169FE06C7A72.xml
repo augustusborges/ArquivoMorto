@@ -1,0 +1,2 @@
+tocTab[tocTab.length] = new Array("0.1.1", "1", "Compra", "EARoot/EA1/EA3.php", "4.png", "", "", "{49BCA33B-78F8-4f05-88DA-D75D4F7EDEC1}", "Package");
+tocTab[tocTab.length] = new Array("0.1.2", "1", "Importação", "EARoot/EA1/EA4.php", "4.png", "", "", "{96467F77-6E8A-4317-BFA8-4F1567E3CD35}", "Package");

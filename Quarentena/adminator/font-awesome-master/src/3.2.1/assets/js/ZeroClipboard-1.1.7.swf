@@ -1,0 +1,64 @@
+.main {
+	width: 996px;
+	height: 416px;
+	overflow: visible;
+}
+
+.view {
+	/*
+	width: 100%;
+	height: 100%;
+	*/
+
+	width: 996px;
+	height: 416px;
+	margin: 0px;
+	float: left;
+	position: relative;
+	border: 8px solid #fff;
+	box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+	background: #333;
+	-webkit-perspective: 1000px;
+	-moz-perspective: 1000px;
+	-o-perspective: 1000px;
+	-ms-perspective: 1000px;
+	perspective: 1000px;
+}
+
+.view .slice{
+	width: 196px;
+	height: 100%;
+	z-index: 100;
+	
+	-webkit-transform-style: preserve-3d;
+	-moz-transform-style: preserve-3d;
+	-o-transform-style: preserve-3d;
+	-ms-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+	
+	-webkit-transform-origin: left center;
+	-moz-transform-origin: left center;
+	-o-transform-origin: left center;
+	-ms-transform-origin: left center;
+	transform-origin: left center;
+	
+	-webkit-transition: -webkit-transform 150ms ease-in-out;
+	-moz-transition: -moz-transform 150ms ease-in-out;
+	-o-transition: -o-transform 150ms ease-in-out;
+	-ms-transition: -ms-transform 150ms ease-in-out;
+	transition: transform 150ms ease-in-out;
+		
+}
+
+.view div.view-back{
+	width: 50%;
+	height: 100%;
+	position: absolute;
+	right: 0;
+	z-index: 0;
+	background: #0a0a0a;
+	background: -moz-linear-gradient(left, #0a0a0a 0%, #666666 100%);
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%,#0a0a0a), color-stop(100%,#666666));
+	background: -webkit-linear-gradient(left, #0a0a0a 0%,#666666 100%);
+	background: -o-linear-gradient(left, #0a0a0a 0%,#666666 100%);
+	background: -ms-linear-gradient(left, #0a0a0a 0%,#666666 100%

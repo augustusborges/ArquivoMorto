@@ -1,0 +1,178 @@
+@import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
+
+
+/* Reset */
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		font-size: 100%;
+		font: inherit;
+		vertical-align: baseline;
+	}
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+		display: block;
+	}
+body {
+		line-height: 1;
+	}
+ol, ul {
+		list-style: none;
+	}
+blockquote, q {
+		quotes: none;
+	}
+blockquote:before, blockquote:after, q:before, q:after {
+		content: '';
+		content: none;
+	}
+table {
+		border-collapse: collapse;
+		border-spacing: 0;
+	}
+body {
+		-webkit-text-size-adjust: none;
+	}
+/* End Reset */
+
+
+
+html {
+	font-size: 13pt;
+}
+
+body{
+    padding-top: 100px;
+    background-color: #000000;
+    font-family: "Poppins", sans-serif;
+	font-weight: 300;
+	font-size: 1rem;
+    color: #ffffff; 
+}
+
+h1{
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+h4{
+    margin-bottom: 50px;
+}
+.center{
+    text-align: center;
+}
+
+.button {
+    background-color: #ffffff;
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    margin: 4px 2px;
+    border-radius: 100%;
+}
+
+@media screen and (max-width: 1680px) {
+
+			html {
+				font-size: 11pt;
+			}
+
+		}
+@media screen and (max-width: 1280px) {
+
+			html {
+				font-size: 11pt;
+			}
+
+		}
+@media screen and (max-width: 980px) {
+    html {
+        font-size: 12pt;
+    }
+    h1{
+        font-size: 32px;
+    }
+		}
+@media screen and (max-width: 736px) {
+    html {
+        font-size: 12pt;
+	}
+    h1{
+        font-size: 28px;
+    }
+}
+@media screen and (max-width: 480px) {
+    html {
+        font-size: 12pt;
+	}
+    h1{
+        font-size: 28px;
+    }
+}
+
+.posicao1{
+  position:absolute; 
+    top:250px;
+    left:50px;
+}
+.posicao11{
+  position:absolute; 
+    top:258px;
+    left:90px;
+}
+.posicao2{
+  position:absolute; 
+    top:350px;
+    left:100px;
+}
+.posicao21{
+  position:absolute; 
+    top:358px;
+    left:140px;
+}
+.posicao3{
+  position:absolute; 
+    top:450px;
+    left:150px;
+}
+.posicao31{
+  position:absolute; 
+    top:458px;
+    left:190px;
+}
+
+@keyframes neon{
+    from{
+        filter:drop-shadow(0 0 0 var(--cor-neon));
+    }
+    to{ 
+        filter:drop-shadow(0 0 60px var(--cor-neon));
+    }
+}
+
+.brilho{
+    animation: neon 3s alternate infinite ease-in-out;
+}
+
+.texto{
+    --cor-neon: #ffffff;
+}
+
+.fundo{
+    background-image: url('/public_html/images/point.png');
+    background-repeat: no-repeat;
+    background-position: right top;
+}
+
+
+
+
+
+
+
+
+
+
+
+

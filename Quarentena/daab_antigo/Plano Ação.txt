@@ -1,0 +1,52 @@
+
+d.a.a.b
+
+	1. Análise e posicionamento tecnológico empresarial
+
+		Análise de dados
+			Atuamos para descobrir padrões de comportamento de clientes, fornecedores ou colaboradores e propor ações sobre estes padrões para maximizar 				resultados operacionais da compania. Toda empresa possui uma grande quantidade de dados inexplorados e o entendimento desses dados podem trazer 			ganhos expressivos em campanhas publicitarias, força de vendas e replanejamento comportamental.Veja Mais...
+				
+		Análise de processos
+			Realizamos o mapeamento dos processos core da empresa visando a documentação e ou reengenharia destes processos. Isso traz dois ganhos 					imediatos para as empresas: 1o. eliminação de pontos de fuga de recursos da compania em processos seja por gargalos, passos desnecessários 				(burocracia), duplicação de processos ou divergência de padrões entre pessoas e/ou setores para um mesmo processo. 2o. uniformidade de processo 			diminuindo a curva de aprendizado de tun over alem de descentralização de conhecimento. 
+
+		Análise de posicionamento digital
+			Toda empresa hoje tem um site, no mínimo uma página no facebook, mas posicionamento digital é muito mais que isso. Atuamos analisando, 					planejando, implantando e mensurando processos 
+
+ 
+	2. Desenvolvimento 
+		Programação
+		 	Desenvolvimento de programas que apresentem resultados para a empresa. Nosso desenvolvimento é direcionado à necessidades especificas não 			fazemos generidades.
+
+		Sistemas Web e Apps
+			Desenvolvimento de sistemas web e aplicativos para implantação de ferramentas de apoio a processos da empresa ou com foco em marketing 			controlado
+	
+
+	3. Presença Digital
+			Implantação e gestão de ferramental que indique os resultados de ações web
+
+
+
+
+
+Tecnologia Dor ou Solução
+	Quanto do seu processo ja esta automatizado?
+		Pedidos online
+		Canais de comunicacao com cliente
+		
+	Quanto do seu processo está integrado?
+	Qual o percentual de economia em processo voce atribui à tecnologia adotada pela sua empresa no ultimo ano
+	Quanto a tecnologia torna sua empresa rápida
+		Na visão do cliente
+		Na visão do fornecedor
+		Na visão do seu publico interno
+	Quanto do seu desempenho esta nas tuas mãos?
+		Quantos pedidos fechados no ultimo dia?
+		Quantos pedidos fechados na ultima hora?
+		Quem é o seu maior vendedor agora?
+		Qual a região te demanda mais?
+		Como é a sazonalidade por regiao por principais clientes?
+	Voce aplica politica de desconto baseado em melhores clientes?
+
+Qual o ROI de TI da sua empresa por cada empreendimento?
+
+Cuide do seu negócio, deixe que cuidamos da tecnologia para voce.

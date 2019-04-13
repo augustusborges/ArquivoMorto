@@ -1,0 +1,5 @@
+# Esse arquivo previne que suas páginas .php sejam acessadas diretamente
+<Files ~ "\.(htaccess|php)$">
+order allow,deny
+deny from all
+</Files>

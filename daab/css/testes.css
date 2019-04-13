@@ -1,0 +1,63 @@
+
+footer{
+  width: 100%;
+  height: 25px; 
+  position: absolute;
+  bottom: 0;
+  color:darkblue;
+}
+
+footer span:nth-child(1){
+  position: absolute;
+  left: 5%;
+}
+
+footer span:nth-child(2){
+  position: absolute;
+  right: 5%;
+}
+
+.borda{
+  border:solid;
+  border-width: 0.2px;
+  border-color: #00ff00;
+}
+
+
+
+/*
+
+.rodape{
+  width: 100%;
+  height: auto;
+  position: absolute;
+  bottom: 0%;
+  z-index: 10;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.rodape_text{
+
+  font-size: .8em;
+}
+
+.rodape_titulo{
+  position: absolute;
+  left: 5%;
+  bottom: 0;
+}
+
+.rodape_endereco{
+  position: absolute;
+  left: 40%;
+  bottom: 0;
+}
+
+.rodape_telefone{
+  position: absolute;
+  right: 5%;
+  bottom: 0;
+}
+
+
+*/

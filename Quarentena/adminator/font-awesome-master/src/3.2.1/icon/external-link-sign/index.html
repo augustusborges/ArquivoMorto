@@ -1,0 +1,325 @@
+ gzip.GzipFile):
+        fid = seek_gzip_factory(file)
+    else:
+        fid = file
+
+    # Code to distinguish from NumPy binary files and pickles.
+    _ZIP_PREFIX = 'PK\x03\x04'
+    N = len(format.MAGIC_PREFIX)
+    magic = fid.read(N)
+    fid.seek(-N, 1) # back-up
+    if magic.startswith(_ZIP_PREFIX):  # zip-file (assume .npz)
+        return NpzFile(fid)
+    elif magic == format.MAGIC_PREFIX: # .npy file
+        if mmap_mode:
+            return format.open_memmap(file, mode=mmap_mode)
+        else:
+            return format.read_array(fid)
+    else:  # Try a pickle
+        try:
+            return _cload(fid)
+        except:
+            raise IOError, \
+                "Failed to interpret file %s as a pickle" % repr(file)
+
+def save(file, arr):
+    """
+    Save an array to a binary file in NumPy ``.npy`` format.
+
+    Parameters
+    ----------
+    file : file or string
+        File or filename to which the data is saved.  If the filename
+        does not already have a ``.npy`` extension, it is added.
+    arr : array_like
+        Array data to be saved.
+
+    See Also
+    --------
+    savez : Save several arrays into a ``.npz`` compressed archive
+    savetxt, load
+
+    Notes
+    -----
+    For a description of the ``.npy`` format, see `format`.
+
+    Examples
+    --------
+    >>> from tempfile import TemporaryFile
+    >>> outfile = TemporaryFile()
+
+    >>> x = np.arange(10)
+    >>> np.save(outfile, x)
+
+    >>> outfile.seek(0) # only necessary in this example (with tempfile)
+    >>> np.load(outfile)
+    array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+    """
+    if isinstance(file, basestring):
+        if not file.endswith('.npy'):
+            file = file + '.npy'
+        fid = open(file, "wb")
+    else:
+        fid = file
+
+    arr = np.asanyarray(arr)
+    format.write_array(fid, arr)
+
+def savez(file, *args, **kwds):
+    """
+    Save several arrays into a single, compressed file in ``.npz`` format.
+
+    If keyword arguments are given, the names for variables assigned to the
+    keywords are the keyword names (not the variable names in the caller).
+    If arguments are passed in with no keywords, the corresponding variable
+    names are arr_0, arr_1, etc.
+
+    Parameters
+    ----------
+    file : str or file
+        Either the file name (string) or an open file (file-like object)
+        If file is a string, it names the output file.  ".npz" will be appended
+        to the file name if it is not already there.
+    args : Arguments
+        Any function arguments other than the file name are variables to save.
+        Since it is not possible for Python to know their names outside
+        `savez`, they will be saved with names "arr_0", "arr_1", and so on.
+        These arguments can be any expression.
+    kwds : Keyword arguments
+        All keyword=value pairs cause the value to be saved with the name of
+        the keyword.
+
+    See Also
+    --------
+    save : Save a single array to a binary file in NumPy format.
+    savetxt : Save an array to a file as plain text.
+
+    Notes
+    -----
+    The ``.npz`` file format is a zipped archive of files named after the
+    variables they contain.  Each file contains one variable in ``.npy``
+    format. For a description of the ``.npy`` format, see `format`.
+
+    Examples
+    --------
+    >>> from tempfile import TemporaryFile
+    >>> outfile = TemporaryFile()
+    >>> x = np.arange(10)
+    >>> y = np.sin(x)
+
+    Using `savez` with \\*args, the arrays are saved with default names.
+
+    >>> np.savez(outfile, x, y)
+    >>> outfile.seek(0)  # only necessary in this example (with tempfile)
+    >>> npz = np.load(outfile)
+    >>> npz.files
+    ['arr_1', 'arr_0']
+    >>> npz['arr_0']
+    array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+    Using `savez` with \\*\\*kwds, the arrays are saved with the keyword names.
+
+    >>> outfile = TemporaryFile()
+    >>> np.savez(outfile, x=x, y=y)
+    >>> outfile.seek(0)
+    >>> npz = np.load(outfile)
+    >>> npz.files
+    ['y', 'x']
+    >>> npz['x']
+    array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+    """
+
+    # Import is postponed to here since zipfile depends on gzip, an optional
+    # component of the so-called standard library.
+    import zipfile
+    # Import deferred for startup time improvement
+    import tempfile
+
+    if isinstance(file, basestring):
+        if not file.endswith('.npz'):
+            file = file + '.npz'
+
+    namedict = kwds
+    for i, val in enumerate(args):
+        key = 'arr_%d' % i
+        if key in namedict.keys():
+            raise ValueError, "Cannot use un-named variables and keyword %s" % key
+        namedict[key] = val
+
+    zip = zipfile.ZipFile(file, mode="w")
+
+    # Stage arrays in a temporary file on disk, before writing to zip.
+    fd, tmpfile = tempfile.mkstemp(suffix='-numpy.npy')
+    os.close(fd)
+    try:
+        for key, val in namedict.iteritems():
+            fname = key + '.npy'
+            fid = open(tmpfile, 'wb')
+            try:
+                format.write_array(fid, np.asanyarray(val))
+                fid.close()
+                fid = None
+                zip.write(tmpfile, arcname=fname)
+            finally:
+                if fid:
+                    fid.close()
+    finally:
+        os.remove(tmpfile)
+
+    zip.close()
+
+# Adapted from matplotlib
+
+def _getconv(dtype):
+    typ = dtype.type
+    if issubclass(typ, np.bool_):
+        return lambda x: bool(int(x))
+    if issubclass(typ, np.integer):
+        return lambda x: int(float(x))
+    elif issubclass(typ, np.floating):
+        return float
+    elif issubclass(typ, np.complex):
+        return complex
+    else:
+        return str
+
+
+
+def loadtxt(fname, dtype=float, comments='#', delimiter=None, converters=None,
+            skiprows=0, usecols=None, unpack=False):
+    """
+    Load data from a text file.
+
+    Each row in the text file must have the same number of values.
+
+    Parameters
+    ----------
+    fname : file or str
+        File or filename to read.  If the filename extension is ``.gz`` or
+        ``.bz2``, the file is first decompressed.
+    dtype : dtype, optional
+        Data type of the resulting array.  If this is a record data-type,
+        the resulting array will be 1-dimensional, and each row will be
+        interpreted as an element of the array.   In this case, the number
+        of columns used must match the number of fields in the data-type.
+    comments : str, optional
+        The character used to indicate the start of a comment.
+    delimiter : str, optional
+        The string used to separate values.  By default, this is any
+        whitespace.
+    converters : dict, optional
+        A dictionary mapping column number to a function that will convert
+        that column to a float.  E.g., if column 0 is a date string:
+        ``converters = {0: datestr2num}``. Converters can also be used to
+        provide a default value for missing data:
+        ``converters = {3: lambda s: float(s or 0)}``.
+    skiprows : int, optional
+        Skip the first `skiprows` lines.
+    usecols : sequence, optional
+        Which columns to read, with 0 being the first.  For example,
+        ``usecols = (1,4,5)`` will extract the 2nd, 5th and 6th columns.
+    unpack : bool, optional
+        If True, the returned array is transposed, so that arguments may be
+        unpacked using ``x, y, z = loadtxt(...)``. Default is False.
+
+    Returns
+    -------
+    out : ndarray
+        Data read from the text file.
+
+    See Also
+    --------
+    load, fromstring, fromregex
+    scipy.io.loadmat : reads Matlab(R) data files
+
+    Examples
+    --------
+    >>> from StringIO import StringIO   # StringIO behaves like a file object
+    >>> c = StringIO("0 1\\n2 3")
+    >>> np.loadtxt(c)
+    array([[ 0.,  1.],
+           [ 2.,  3.]])
+
+    >>> d = StringIO("M 21 72\\nF 35 58")
+    >>> np.loadtxt(d, dtype={'names': ('gender', 'age', 'weight'),
+    ...                      'formats': ('S1', 'i4', 'f4')})
+    array([('M', 21, 72.0), ('F', 35, 58.0)],
+          dtype=[('gender', '|S1'), ('age', '<i4'), ('weight', '<f4')])
+
+    >>> c = StringIO("1,0,2\\n3,0,4")
+    >>> x, y = np.loadtxt(c, delimiter=',', usecols=(0, 2), unpack=True)
+    >>> x
+    array([ 1.,  3.])
+    >>> y
+    array([ 2.,  4.])
+
+    """
+    user_converters = converters
+
+    if usecols is not None:
+        usecols = list(usecols)
+
+    isstring = False
+    if _is_string_like(fname):
+        isstring = True
+        if fname.endswith('.gz'):
+            import gzip
+            fh = seek_gzip_factory(fname)
+        elif fname.endswith('.bz2'):
+            import bz2
+            fh = bz2.BZ2File(fname)
+        else:
+            fh = file(fname)
+    elif hasattr(fname, 'readline'):
+        fh = fname
+    else:
+        raise ValueError('fname must be a string or file handle')
+    X = []
+
+    def flatten_dtype(dt):
+        """Unpack a structured data-type."""
+        if dt.names is None:
+            # If the dtype is flattened, return.
+            # If the dtype has a shape, the dtype occurs
+            # in the list more than once.
+            return [dt.base] * int(np.prod(dt.shape))
+        else:
+            types = []
+            for field in dt.names:
+                tp, bytes = dt.fields[field]
+                flat_dt = flatten_dtype(tp)
+                types.extend(flat_dt)
+            return types
+
+    def split_line(line):
+        """Chop off comments, strip, and split at delimiter."""
+        line = line.split(comments)[0].strip()
+        if line:
+            return line.split(delimiter)
+        else:
+            return []
+
+    try:
+        # Make sure we're dealing with a proper dtype
+        dtype = np.dtype(dtype)
+        defconv = _getconv(dtype)
+
+        # Skip the first `skiprows` lines
+        for i in xrange(skiprows):
+            fh.readline()
+
+        # Read until we find a line with some values, and use
+        # it to estimate the number of columns, N.
+        first_vals = None
+        while not first_vals:
+            first_line = fh.readline()
+            if first_line == '': # EOF reached
+                raise IOError('End-of-file reached before encountering data.')
+            first_vals = split_line(first_line)
+        N = len(usecols or first_vals)
+
+        dtype_types = flatten_dtype(dtype)
+        if len(dtype_types) > 1:
+            # We're deal
