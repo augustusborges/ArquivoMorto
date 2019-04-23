@@ -66,4 +66,9 @@ btnenviar.addEventListener('click', function(){
 
 }); 
 
+// const clicado = this;
+//  clicado.addEventListener('click', function(){
+//  	console.log(this.name);
+//  });
+
 
